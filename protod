@@ -29,6 +29,7 @@ Author: Damien Cauquil <d.cauquil@sysdream.com>
 
 import sys
 import os
+import re
 
 # require google's protobuf library
 from google.protobuf.descriptor_pb2 import FileDescriptorProto, FieldDescriptorProto
@@ -55,12 +56,7 @@ def is_valid_filename(filename):
     '''
     Check if given filename may be valid
     '''
-    charset = 'abcdefghijklmnopqrstuvwxyz0123456789-_/$,.[]()'
-    for char in filename.lower():
-        if char not in charset:
-            return False
-    return True
-
+    return re.match("^[A-Za-z0-9-_/$,\.[\]()]+$", filename)
 
 def decode_varint128(stream):
     '''
