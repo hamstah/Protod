@@ -39,6 +39,18 @@ from google.protobuf.message import DecodeError
 # helpers
 ###########
 
+
+def save_file(filename, content, binary=False):
+    mode = 'w'
+    if binary:
+        mode += 'b'
+
+    _dir = os.path.dirname(filename)
+    if _dir != '' and not os.path.exists(_dir):
+        os.makedirs(_dir)
+    with open(filename, mode) as f:
+        f.write(content)
+
 def is_valid_filename(filename):
     '''
     Check if given filename may be valid
@@ -229,16 +241,11 @@ class FileDescriptorDisassembler:
         if len(self.desc.message_type)>0:
             for message in self.desc.message_type:
                 buffer += self.renderField(message, package=self.desc.package)
-        if filename:
-            _dir = os.path.dirname(filename)
-            if _dir != '' and not os.path.exists(_dir):
-                os.makedirs(_dir)
-            open(filename,'w').write(buffer)
-        else:        
-            _dir = os.path.dirname(self.desc.name)
-            if _dir != '' and not os.path.exists(_dir):
-                os.makedirs(_dir)
-            open(self.desc.name,'w').write(buffer)
+
+        if not filename:
+            filename = self.desc.name
+        save_file(filename, buffer)
+
 
 #############################
 # Main code
@@ -299,7 +306,11 @@ class ProtobufExtractor:
                     res = FileDescriptorDisassembler(fds)
                     if len(res.desc.name)>0:
                         if res.desc.name not in seen:
-                            open(res.desc.name+'.protoc','wb').write(content)
+                            proto_filename = res.desc.name
+                            if not proto_filename.endswith(".proto"):
+                                proto_filename += ".proto"
+
+                            save_file(proto_filename+".bin", content, True)
                             res.render()
                             seen.append(res.desc.name)
                 except DecodeError:
